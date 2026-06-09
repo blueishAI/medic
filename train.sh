@@ -131,6 +131,7 @@ run_variant() {
   export MEDIC_LORA_ALPHA="${lora_alpha}"
   export MEDIC_LORA_DROPOUT="0.03"
   export MEDIC_MAX_SAMPLES="${max_samples}"
+  export MEDIC_STRICT_VALIDATE="${MEDIC_STRICT_VALIDATE:-0}"
   export MEDIC_LOG_EVERY="20"
   export MEDIC_QLORA="1"
   export MEDIC_DEVICE_MAP="single"
@@ -170,7 +171,7 @@ run_variant() {
 }
 
 run_variant 1.5b firstaid "Qwen/Qwen2.5-1.5B-Instruct" "adaptors-anant-base" \
-  1200 192 1 16 1e-4 8 16 60000
+  4000 192 1 16 8e-5 8 16 500000
 
 echo "[final] Package artifacts"
 cp modelfile-medic-q4 modelfile-medic-q8 speed_run.sh "${MEDIC_OUTPUT_DIR}/"

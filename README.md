@@ -39,6 +39,26 @@ Default base path:
 4. Convert to GGUF.
 5. Quantize to `Q4_K_M` and `Q8_0`.
 
+Default data mix:
+
+```text
+first_aid_seed.jsonl
+i-am-mushfiq/FirstAidQA
+nuhmanpk/firstaid-treatment-instruct
+lextale/FirstAidInstructionsDataset
+belvisk/First-Aid-Dataset
+badri55/First_aid__dataset
+lavita/medical-qa-datasets all-processed
+ruslanmv/ai-medical-chatbot
+FreedomIntelligence/Medical-R1-Distill-Data
+FreedomIntelligence/medical-o1-reasoning-SFT en
+medalpaca/medical_meadow_medqa
+medalpaca/medical_meadow_wikidoc
+medalpaca/medical_meadow_medical_flashcards
+keivalya/MedQuad-MedicalQnADataset
+qiaojin/PubMedQA pqa_labeled
+```
+
 Override data:
 
 ```bash

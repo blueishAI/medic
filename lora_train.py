@@ -1,5 +1,7 @@
 import gc
+import ast
 import os
+from pathlib import Path
 from itertools import islice
 from typing import Dict, List
 
@@ -98,14 +100,55 @@ def _example_messages(example: Dict, cfg: MedicConfig) -> List[Dict[str, str]]:
             mapped.append({"role": role, "content": item.get("value", item.get("content", ""))})
         return [{"role": "system", "content": SYSTEM_PROMPT}] + _clean_messages(mapped)
 
-    question = _first_text(example, [cfg.prompt_column, "instruction", "question", "input", "Query", "Question"])
-    answer = _first_text(example, [cfg.response_column, "output", "answer", "response", "Answer", "Response"])
+    if "patterns" in example and "responses" in example:
+        try:
+            patterns = ast.literal_eval(str(example["patterns"]))
+            responses = ast.literal_eval(str(example["responses"]))
+            question = str(patterns[0]).strip() if patterns else ""
+            answer = str(responses[0]).strip() if responses else ""
+            if question and answer:
+                return [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": question},
+                    {"role": "assistant", "content": answer},
+                ]
+        except (SyntaxError, ValueError):
+            pass
+
+    question = _first_text(
+        example,
+        [cfg.prompt_column, "instruction", "question", "input", "Query", "Question", "Patient", "Description"],
+    )
+    answer = _first_text(
+        example,
+        [
+            cfg.response_column,
+            "output",
+            "answer",
+            "response",
+            "Answer",
+            "Response",
+            "Doctor",
+            "long_answer",
+            "response (content)",
+        ],
+    )
 
     if example.get("input") and example.get("instruction") and example.get("output"):
         question = f"{example['instruction']}\n\n{example['input']}".strip()
         answer = str(example["output"]).strip()
 
-    if not question or not answer:
+    if "reasoning (reasoning_content)" in example and answer:
+        reasoning = str(example.get("reasoning (reasoning_content)", "")).strip()
+        if reasoning:
+            answer = f"{reasoning}\n\nFinal answer: {answer}"
+
+    if "Complex_CoT" in example and answer:
+        reasoning = str(example.get("Complex_CoT", "")).strip()
+        if reasoning:
+            answer = f"{reasoning}\n\nFinal answer: {answer}"
+
+    if not question or not answer or len(answer.strip()) < 8:
         raise KeyError(f"Cannot map dataset row with columns: {sorted(example.keys())}")
 
     return [
@@ -151,6 +194,13 @@ def _tokenize_chat(tokenizer, messages: List[Dict], max_length: int) -> Dict[str
     return {"input_ids": input_ids, "attention_mask": [1] * len(input_ids), "labels": labels}
 
 
+def _tokenize_example(tokenizer, example: Dict, cfg: MedicConfig) -> Dict[str, List[int]]:
+    try:
+        return _tokenize_chat(tokenizer, _example_messages(example, cfg), cfg.seq_len)
+    except (KeyError, TypeError, ValueError, SyntaxError):
+        return {"input_ids": [], "attention_mask": [], "labels": []}
+
+
 def _split_csv(value: str) -> List[str]:
     return [item.strip() for item in value.split(",")]
 
@@ -171,13 +221,20 @@ def _load_training_dataset(cfg: MedicConfig, tokenizer):
     datasets = []
     per_dataset_max = cfg.max_samples // len(dataset_ids) if cfg.max_samples > 0 and len(dataset_ids) > 1 else cfg.max_samples
     for dataset_id, config_name, split in zip(dataset_ids, configs, splits):
+        local_path = Path(dataset_id)
         if per_dataset_max > 0:
-            stream = load_dataset(dataset_id, config_name or None, split=split, streaming=True)
+            if local_path.exists():
+                stream = load_dataset("json", data_files=str(local_path), split=split, streaming=True)
+            else:
+                stream = load_dataset(dataset_id, config_name or None, split=split, streaming=True)
             ds = Dataset.from_list(list(islice(stream, per_dataset_max)))
         else:
-            ds = load_dataset(dataset_id, config_name or None, split=split)
+            if local_path.exists():
+                ds = load_dataset("json", data_files=str(local_path), split=split)
+            else:
+                ds = load_dataset(dataset_id, config_name or None, split=split)
         ds = ds.map(
-            lambda example: _tokenize_chat(tokenizer, _example_messages(example, cfg), cfg.seq_len),
+            lambda example: _tokenize_example(tokenizer, example, cfg),
             remove_columns=ds.column_names,
         )
         datasets.append(ds)
