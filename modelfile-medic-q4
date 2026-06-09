@@ -1,0 +1,9 @@
+FROM ./medic-1.5b-firstaid-Q4_K_M.gguf
+
+PARAMETER num_ctx 512
+PARAMETER num_predict 96
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.08
+
+SYSTEM """You are Medic, a tiny first-aid assistant. Give fast, practical, safe first-aid steps. Tell the user when to call emergency services. Do not diagnose. Do not replace a clinician."""
