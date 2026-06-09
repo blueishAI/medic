@@ -15,7 +15,7 @@ class MedicConfig:
     prepared_base_dir_env: str = os.getenv("MEDIC_PREPARED_BASE_DIR", "")
 
     # LoRA training schedule tuned for Kaggle T4 x2 and tiny-device output.
-    seq_len: int = int(os.getenv("MEDIC_SEQ_LEN", "192"))
+    seq_len: int = int(os.getenv("MEDIC_SEQ_LEN", "384"))
     micro_batch_size: int = int(os.getenv("MEDIC_MICRO_BATCH", "1"))
     grad_accum_steps: int = int(os.getenv("MEDIC_GRAD_ACCUM", "16"))
     log_every: int = int(os.getenv("MEDIC_LOG_EVERY", "20"))
@@ -24,19 +24,19 @@ class MedicConfig:
     lora_alpha: int = int(os.getenv("MEDIC_LORA_ALPHA", "16"))
     lora_dropout: float = float(os.getenv("MEDIC_LORA_DROPOUT", "0.03"))
     lora_lr: float = float(os.getenv("MEDIC_LORA_LR", "1e-4"))
-    lora_steps: int = int(os.getenv("MEDIC_LORA_STEPS", "1200"))
+    lora_steps: int = int(os.getenv("MEDIC_LORA_STEPS", "1800"))
 
     # Data. Multiple datasets/splits are comma-separated.
     dataset_id: str = os.getenv(
         "MEDIC_DATASET",
-        "first_aid_seed.jsonl,first_aid_seed.jsonl,nuhmanpk/firstaid-treatment-instruct,lextale/FirstAidInstructionsDataset,belvisk/First-Aid-Dataset,badri55/First_aid__dataset,lavita/medical-qa-datasets,ruslanmv/ai-medical-chatbot,FreedomIntelligence/Medical-R1-Distill-Data,FreedomIntelligence/medical-o1-reasoning-SFT,medalpaca/medical_meadow_medqa,medalpaca/medical_meadow_wikidoc,medalpaca/medical_meadow_medical_flashcards,keivalya/MedQuad-MedicalQnADataset,qiaojin/PubMedQA",
+        "first_aid_seed.jsonl,first_aid_seed.jsonl,first_aid_seed.jsonl,first_aid_seed.jsonl,first_aid_seed.jsonl,i-am-mushfiq/FirstAidQA",
     )
-    dataset_config: str = os.getenv("MEDIC_DATASET_CONFIG", ",,,,,,all-processed,,,en,,,,,pqa_labeled")
+    dataset_config: str = os.getenv("MEDIC_DATASET_CONFIG", ",,,,,")
     dataset_split: str = os.getenv(
         "MEDIC_DATASET_SPLIT",
-        "train,train,train,train,train,train,train,train,train,train,train,train,train,train,train",
+        "train,train,train,train,train,train",
     )
-    max_samples: int = int(os.getenv("MEDIC_MAX_SAMPLES", "500000"))
+    max_samples: int = int(os.getenv("MEDIC_MAX_SAMPLES", "8000"))
     messages_column: str = os.getenv("MEDIC_MESSAGES_COLUMN", "messages")
     prompt_column: str = os.getenv("MEDIC_PROMPT_COLUMN", "prompt")
     response_column: str = os.getenv("MEDIC_RESPONSE_COLUMN", "response")

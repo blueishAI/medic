@@ -39,24 +39,14 @@ Default base path:
 4. Convert to GGUF.
 5. Quantize to `Q4_K_M` and `Q8_0`.
 
-Default data mix:
+Default data mix is first-aid only. Do not add broad medical QA or reasoning datasets for this model; they teach diagnosis-style answers and rambling.
 
 ```text
-first_aid_seed.jsonl
-nuhmanpk/firstaid-treatment-instruct
-lextale/FirstAidInstructionsDataset
-belvisk/First-Aid-Dataset
-badri55/First_aid__dataset
-lavita/medical-qa-datasets all-processed
-ruslanmv/ai-medical-chatbot
-FreedomIntelligence/Medical-R1-Distill-Data
-FreedomIntelligence/medical-o1-reasoning-SFT en
-medalpaca/medical_meadow_medqa
-medalpaca/medical_meadow_wikidoc
-medalpaca/medical_meadow_medical_flashcards
-keivalya/MedQuad-MedicalQnADataset
-qiaojin/PubMedQA pqa_labeled
+first_aid_seed.jsonl repeated 5x
+i-am-mushfiq/FirstAidQA
 ```
+
+`nuhmanpk/firstaid-treatment-instruct` is intentionally not in the default mix. It is large and first-aid-labeled, but many rows are passage-summary/chunk tasks; use it only with the training quality filter enabled.
 
 Training uses QLoRA by default with `MEDIC_DEVICE_MAP=auto`, so one 4-bit model is spread across the two T4 GPUs instead of loading duplicate copies.
 

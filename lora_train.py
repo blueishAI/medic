@@ -87,9 +87,83 @@ def _first_text(example: Dict, names: List[str]) -> str:
     return ""
 
 
+def _is_quality_first_aid_pair(question: str, answer: str) -> bool:
+    q = " ".join(question.lower().split())
+    a = " ".join(answer.lower().split())
+    text = f"{q} {a}"
+
+    reject_markers = [
+        "okay, let's think",
+        "let's think about",
+        "the question is asking",
+        "complex_cot",
+        "final answer:",
+        "100% sure",
+        "as an ai",
+        "differential diagnosis",
+        "diagnose",
+        "prescribe",
+        "summarize this passage",
+        "extract procedural steps",
+        "list key takeaways",
+        "provided context",
+        "contentreference",
+        "chunk_",
+        ".pdf_chunk",
+        "the study",
+        "statistically significant",
+        "low-certainty evidence",
+    ]
+    if any(marker in text for marker in reject_markers):
+        return False
+
+    first_aid_terms = [
+        "first aid",
+        "emergency",
+        "call 911",
+        "call emergency",
+        "poison",
+        "chok",
+        "bleed",
+        "burn",
+        "seizure",
+        "stroke",
+        "cpr",
+        "allergic",
+        "epinephrine",
+        "faint",
+        "wound",
+        "fracture",
+        "sprain",
+        "heat exhaustion",
+        "hypothermia",
+        "household cleaner",
+        "injur",
+        "accident",
+        "unconscious",
+        "breath",
+        "shock",
+        "bite",
+        "sting",
+        "drown",
+        "bandage",
+        "ambulance",
+    ]
+    if not any(term in text for term in first_aid_terms):
+        return False
+
+    if len(answer) < 40 or len(answer) > 1200:
+        return False
+    return True
+
+
 def _example_messages(example: Dict, cfg: MedicConfig) -> List[Dict[str, str]]:
     if cfg.messages_column in example and example[cfg.messages_column]:
         messages = _clean_messages(example[cfg.messages_column])
+        user_text = " ".join(message["content"] for message in messages if message["role"] == "user")
+        assistant_text = " ".join(message["content"] for message in messages if message["role"] == "assistant")
+        if not _is_quality_first_aid_pair(user_text, assistant_text):
+            raise KeyError("Not a focused first-aid row")
         return [{"role": "system", "content": SYSTEM_PROMPT}] + messages
 
     if "conversations" in example and example["conversations"]:
@@ -98,7 +172,12 @@ def _example_messages(example: Dict, cfg: MedicConfig) -> List[Dict[str, str]]:
             role = item.get("from", item.get("role", "user"))
             role = "assistant" if str(role).lower() in {"assistant", "gpt"} else "user"
             mapped.append({"role": role, "content": item.get("value", item.get("content", ""))})
-        return [{"role": "system", "content": SYSTEM_PROMPT}] + _clean_messages(mapped)
+        messages = _clean_messages(mapped)
+        user_text = " ".join(message["content"] for message in messages if message["role"] == "user")
+        assistant_text = " ".join(message["content"] for message in messages if message["role"] == "assistant")
+        if not _is_quality_first_aid_pair(user_text, assistant_text):
+            raise KeyError("Not a focused first-aid row")
+        return [{"role": "system", "content": SYSTEM_PROMPT}] + messages
 
     if "patterns" in example and "responses" in example:
         try:
@@ -106,7 +185,7 @@ def _example_messages(example: Dict, cfg: MedicConfig) -> List[Dict[str, str]]:
             responses = ast.literal_eval(str(example["responses"]))
             question = str(patterns[0]).strip() if patterns else ""
             answer = str(responses[0]).strip() if responses else ""
-            if question and answer:
+            if question and answer and _is_quality_first_aid_pair(question, answer):
                 return [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": question},
@@ -138,18 +217,10 @@ def _example_messages(example: Dict, cfg: MedicConfig) -> List[Dict[str, str]]:
         question = f"{example['instruction']}\n\n{example['input']}".strip()
         answer = str(example["output"]).strip()
 
-    if "reasoning (reasoning_content)" in example and answer:
-        reasoning = str(example.get("reasoning (reasoning_content)", "")).strip()
-        if reasoning:
-            answer = f"{reasoning}\n\nFinal answer: {answer}"
-
-    if "Complex_CoT" in example and answer:
-        reasoning = str(example.get("Complex_CoT", "")).strip()
-        if reasoning:
-            answer = f"{reasoning}\n\nFinal answer: {answer}"
-
     if not question or not answer or len(answer.strip()) < 8:
         raise KeyError(f"Cannot map dataset row with columns: {sorted(example.keys())}")
+    if not _is_quality_first_aid_pair(question, answer):
+        raise KeyError("Not a focused first-aid row")
 
     return [
         {"role": "system", "content": SYSTEM_PROMPT},

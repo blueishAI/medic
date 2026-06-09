@@ -171,7 +171,7 @@ run_variant() {
 }
 
 run_variant 1.5b firstaid "Qwen/Qwen2.5-1.5B-Instruct" "adaptors-anant-base" \
-  4000 192 1 16 8e-5 8 16 500000
+  1800 384 1 16 8e-5 8 16 8000
 
 echo "[final] Package artifacts"
 cp modelfile-medic-q4 modelfile-medic-q8 speed_run.sh "${MEDIC_OUTPUT_DIR}/"
