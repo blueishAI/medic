@@ -134,7 +134,7 @@ run_variant() {
   export MEDIC_STRICT_VALIDATE="${MEDIC_STRICT_VALIDATE:-0}"
   export MEDIC_LOG_EVERY="20"
   export MEDIC_QLORA="1"
-  export MEDIC_DEVICE_MAP="single"
+  export MEDIC_DEVICE_MAP="auto"
   export MEDIC_MAX_MEMORY_GPU="13GiB"
   export MEDIC_MAX_MEMORY_CPU="24GiB"
 
@@ -148,7 +148,7 @@ run_variant() {
   python prepare_anant_base.py
 
   echo "[train] ${artifact}"
-  torchrun --standalone --nproc_per_node=2 lora_train.py 2>&1 | tee -a "${MEDIC_OUTPUT_DIR}/logs/train.log"
+  python lora_train.py 2>&1 | tee -a "${MEDIC_OUTPUT_DIR}/logs/train.log"
 
   echo "[merge] ${artifact}"
   python lora_merge.py

@@ -29,7 +29,7 @@ class MedicConfig:
     # Data. Multiple datasets/splits are comma-separated.
     dataset_id: str = os.getenv(
         "MEDIC_DATASET",
-        "first_aid_seed.jsonl,i-am-mushfiq/FirstAidQA,nuhmanpk/firstaid-treatment-instruct,lextale/FirstAidInstructionsDataset,belvisk/First-Aid-Dataset,badri55/First_aid__dataset,lavita/medical-qa-datasets,ruslanmv/ai-medical-chatbot,FreedomIntelligence/Medical-R1-Distill-Data,FreedomIntelligence/medical-o1-reasoning-SFT,medalpaca/medical_meadow_medqa,medalpaca/medical_meadow_wikidoc,medalpaca/medical_meadow_medical_flashcards,keivalya/MedQuad-MedicalQnADataset,qiaojin/PubMedQA",
+        "first_aid_seed.jsonl,first_aid_seed.jsonl,nuhmanpk/firstaid-treatment-instruct,lextale/FirstAidInstructionsDataset,belvisk/First-Aid-Dataset,badri55/First_aid__dataset,lavita/medical-qa-datasets,ruslanmv/ai-medical-chatbot,FreedomIntelligence/Medical-R1-Distill-Data,FreedomIntelligence/medical-o1-reasoning-SFT,medalpaca/medical_meadow_medqa,medalpaca/medical_meadow_wikidoc,medalpaca/medical_meadow_medical_flashcards,keivalya/MedQuad-MedicalQnADataset,qiaojin/PubMedQA",
     )
     dataset_config: str = os.getenv("MEDIC_DATASET_CONFIG", ",,,,,,all-processed,,,en,,,,,pqa_labeled")
     dataset_split: str = os.getenv(

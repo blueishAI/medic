@@ -221,23 +221,29 @@ def _load_training_dataset(cfg: MedicConfig, tokenizer):
     datasets = []
     per_dataset_max = cfg.max_samples // len(dataset_ids) if cfg.max_samples > 0 and len(dataset_ids) > 1 else cfg.max_samples
     for dataset_id, config_name, split in zip(dataset_ids, configs, splits):
-        local_path = Path(dataset_id)
-        if per_dataset_max > 0:
-            if local_path.exists():
-                stream = load_dataset("json", data_files=str(local_path), split=split, streaming=True)
+        try:
+            local_path = Path(dataset_id)
+            if per_dataset_max > 0:
+                if local_path.exists():
+                    stream = load_dataset("json", data_files=str(local_path), split=split, streaming=True)
+                else:
+                    stream = load_dataset(dataset_id, config_name or None, split=split, streaming=True)
+                ds = Dataset.from_list(list(islice(stream, per_dataset_max)))
             else:
-                stream = load_dataset(dataset_id, config_name or None, split=split, streaming=True)
-            ds = Dataset.from_list(list(islice(stream, per_dataset_max)))
-        else:
-            if local_path.exists():
-                ds = load_dataset("json", data_files=str(local_path), split=split)
-            else:
-                ds = load_dataset(dataset_id, config_name or None, split=split)
+                if local_path.exists():
+                    ds = load_dataset("json", data_files=str(local_path), split=split)
+                else:
+                    ds = load_dataset(dataset_id, config_name or None, split=split)
+        except Exception as exc:
+            print(f"[data] WARNING: skipping {dataset_id} config={config_name or '-'} split={split}: {exc}")
+            continue
         ds = ds.map(
             lambda example: _tokenize_example(tokenizer, example, cfg),
             remove_columns=ds.column_names,
         )
         datasets.append(ds)
+    if not datasets:
+        raise RuntimeError("No training datasets loaded.")
     return concatenate_datasets(datasets) if len(datasets) > 1 else datasets[0]
 
 

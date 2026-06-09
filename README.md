@@ -43,7 +43,6 @@ Default data mix:
 
 ```text
 first_aid_seed.jsonl
-i-am-mushfiq/FirstAidQA
 nuhmanpk/firstaid-treatment-instruct
 lextale/FirstAidInstructionsDataset
 belvisk/First-Aid-Dataset
@@ -58,6 +57,8 @@ medalpaca/medical_meadow_medical_flashcards
 keivalya/MedQuad-MedicalQnADataset
 qiaojin/PubMedQA pqa_labeled
 ```
+
+Training uses QLoRA by default with `MEDIC_DEVICE_MAP=auto`, so one 4-bit model is spread across the two T4 GPUs instead of loading duplicate copies.
 
 Override data:
 
